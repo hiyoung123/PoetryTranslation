@@ -8,8 +8,8 @@ import pandas as pd
 import torch
 from collections import Counter
 
-from .model.seq2seq_attention import Seq2Seq, Encoder, Decoder
-from .model.criterion import MaskCriterion
+from model.seq2seq_attention import Seq2Seq, Encoder, Decoder
+from model.criterion import MaskCriterion
 
 
 torch.manual_seed(123) #保证每次运行初始化的随机数相同
@@ -20,17 +20,26 @@ def process_data(file_name, source_file, target_file):
     data = pd.read_csv(file_name)
     source = open(source_file, 'w', encoding='utf-8')
     target = open(target_file, 'w', encoding='utf-8')
+    a = 0
     for i, item in data.iterrows():
         content = item['content']
-        content = content.strip().split('。').split('！').split('？')
         translation = item['translation']
-        translation = translation.strip().split('。').split('！').split('？')
-        if len(content) == 0 or len(translation) == 0:
+        if str(content) == 'nan' or str(translation) == 'nan' \
+                or '（' in content or '（' in translation \
+                or '(' in content or '(' in translation \
+                or '[' in content or '[' in translation \
+                or '【' in content or '【' in translation:
             continue
+        content = content.strip().replace('。', '？').replace('！', '？').split('？')
+        translation = translation.strip().replace('。', '？').replace('！', '？').split('？')
+
+        if len(content) != len(translation):
+            continue
+
         for s, t in zip(content, translation):
-            source.write(s)
-            target.write(t)
-        print('process len:%s' % i+1)
+            source.write(s.strip()+'\n')
+            target.write(t.strip()+'\n')
+        print('process len:{}'.format(i+1))
     source.close()
     target.close()
 
