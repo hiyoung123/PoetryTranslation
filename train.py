@@ -13,6 +13,7 @@ from model.criterion import MaskCriterion
 
 
 torch.manual_seed(123) #保证每次运行初始化的随机数相同
+os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
