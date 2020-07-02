@@ -251,10 +251,10 @@ def train(model, data, epoches):
             torch.nn.utils.clip_grad_norm_(model.parameters(), 5.)
             optimizer.step()
 
-            if (it % 50 == 0):
+            if (it % 5 == 0):
                 print("Epoch {} / {}, Iteration: {}, Train Loss: {}".format(epoch, epoches, it, loss.item()))
         print("Epoch {} / {}, Train Loss: {}".format(epoch, epoches, total_loss / total_words))
-        if (epoch != 0 and epoch % 100 == 0):
+        if (epoch != 0 and epoch % 10 == 0):
             val_loss = test(model, test_datasets)
             if val_loss < best_loss:
                 best_loss = val_loss
