@@ -258,6 +258,7 @@ def train(model, data, epoches):
             val_loss = test(model, test_datasets)
             if val_loss < best_loss:
                 best_loss = val_loss
+                save(model, 'best_translation.model')
 
 
 def save(model, file_path):
