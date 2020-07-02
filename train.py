@@ -1,7 +1,7 @@
 #!usr/bin/env python
 #-*- coding:utf-8 -*-
 
-
+import os
 import numpy as np
 import jieba
 import pandas as pd
@@ -20,7 +20,6 @@ def process_data(file_name, source_file, target_file):
     data = pd.read_csv(file_name)
     source = open(source_file, 'w', encoding='utf-8')
     target = open(target_file, 'w', encoding='utf-8')
-    a = 0
     for i, item in data.iterrows():
         content = item['content']
         translation = item['translation']
@@ -44,7 +43,7 @@ def process_data(file_name, source_file, target_file):
     target.close()
 
 
-def load_data(file_name, is_en=False):
+def load_data(file_name):
     #逐句读取文本，并将句子进行分词，且在句子前面加上'BOS'表示句子开始，在句子末尾加上'EOS'表示句子结束
     datas = []
     with open(file_name, 'r', encoding='utf-8') as f:
@@ -52,12 +51,10 @@ def load_data(file_name, is_en=False):
             if(i>200000):
                 break
             line = line.strip()
-            if(is_en):
-                # datas.append(["BOS"] + nltk.word_tokenize(line.lower()) + ["EOS"])
-                #datas.append(["BOS"] + list(line.lower().split()) + ["EOS"])
-                pass
-            else:
-                datas.append(["BOS"] + list(jieba.cut(line, cut_all=False)) + ["EOS"])
+            if len(line) == 0:
+                continue
+            datas.append(["BOS"] + list(jieba.cut(line, cut_all=False)) + ["EOS"])
+            print('process len:{}'.format(i+1))
     return datas
 
 
@@ -205,10 +202,13 @@ def test(mode, data):
             total_loss += loss.item() * num_words
             total_words += num_words
         print("Test Loss:", total_loss / total_words)
+    return total_loss / total_words
 
 
 def train(model, data, epoches):
+    print('Start training')
     test_datasets = []
+    best_loss = 10000
     for epoch in range(epoches):
         model.train()
         total_words = 0
@@ -254,8 +254,23 @@ def train(model, data, epoches):
                 print("Epoch {} / {}, Iteration: {}, Train Loss: {}".format(epoch, epoches, it, loss.item()))
         print("Epoch {} / {}, Train Loss: {}".format(epoch, epoches, total_loss / total_words))
         if (epoch != 0 and epoch % 100 == 0):
-            test(model, test_datasets)
+            val_loss = test(model, test_datasets)
+            if val_loss < best_loss:
+                best_loss = val_loss
 
+
+def save(model, file_path):
+    # torch.save(self.model.cpu(), file_path)
+    # self.model.to(self.device)
+    torch.save(model.state_dict(), file_path)
+    print('Model save {}'.format(file_path))
+
+
+def load(model, file_path):
+    if not os.path.exists(file_path):
+        return
+    # self.model = torch.load(file_path)
+    model.load_state_dict(torch.load(file_path))
 
 train(model, datasets, epoches=200)
 
