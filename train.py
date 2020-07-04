@@ -41,8 +41,13 @@ def evaluate(model, val_iter, vocab_size, source_dict, target_dict):
     total_loss = 0
     with torch.no_grad():
         for b, batch in enumerate(val_iter):
-            src, len_src = batch.src
-            trg, len_trg = batch.trg
+            # src, len_src = batch.src
+            # trg, len_trg = batch.trg
+            # src, len_src = batch[0], batch[1]
+            # trg, len_trg = batch[2], batch[3]
+            src = torch.from_numpy(batch[0]).to(device).long()
+            # src, trg = src.cuda(), trg.cuda()
+            trg = torch.from_numpy(batch[2]).to(device).long()
             src = Variable(src.data.cuda())
             trg = Variable(trg.data.cuda())
             output = model(src, trg, teacher_forcing_ratio=0.0)
@@ -67,9 +72,11 @@ def train(e, model, optimizer, train_iter, vocab_size, grad_clip, source_dict, t
     total_loss = 0
     pad = target_dict['PAD']
     for b, batch in enumerate(train_iter):
-        src, len_src = batch[0], batch[1]
-        trg, len_trg = batch[2], batch[3]
-        src, trg = src.cuda(), trg.cuda()
+        # src, len_src = batch[0], batch[1]
+        # trg, len_trg = batch[2], batch[3]
+        src = torch.from_numpy(batch[0]).to(device).long()
+        # src, trg = src.cuda(), trg.cuda()
+        trg = torch.from_numpy(batch[2]).to(device).long()
         optimizer.zero_grad()
         output = model(src, trg)
         loss = F.nll_loss(output[1:].view(-1, vocab_size),
