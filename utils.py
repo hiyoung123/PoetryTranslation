@@ -69,10 +69,10 @@ def get_batches(num_sentences, batch_size, shuffle=True):
     return batches
 
 
-def add_padding(batch_sentences):
+def add_padding(batch_sentences, max_len):
     # 为每个batch的数据添加padding，并记录下句子原本的长度
-    lengths = [len(sentence) for sentence in batch_sentences]  # 每个句子的实际长度
-    max_len = np.max(lengths)  # 当前batch中最长句子的长度
+    # lengths = [len(sentence) for sentence in batch_sentences]  # 每个句子的实际长度
+    # max_len = np.max(lengths)  # 当前batch中最长句子的长度
     data = []
     for sentence in batch_sentences:
         sen_len = len(sentence)
@@ -80,7 +80,8 @@ def add_padding(batch_sentences):
         sentence = sentence + [0] * (max_len - sen_len)
         data.append(sentence)
     data = np.array(data).astype('int32')
-    data_lengths = np.array(lengths).astype('int32')
+    # data_lengths = np.array(lengths).astype('int32')
+    data_lengths = np.array(max_len).astype('int32')
     return data, data_lengths
 
 
@@ -91,8 +92,9 @@ def generate_dataset(en, cn, batch_size):
     for batch in batches:
         batch_en = [en[idx] for idx in batch]
         batch_cn = [cn[idx] for idx in batch]
-        batch_x, batch_x_len = add_padding(batch_en)
-        batch_y, batch_y_len = add_padding(batch_cn)
+        max_len = max(map(len, batch_en+batch_cn))
+        batch_x, batch_x_len = add_padding(batch_en, max_len)
+        batch_y, batch_y_len = add_padding(batch_cn, max_len)
         datasets.append((batch_x, batch_x_len, batch_y, batch_y_len))
     return datasets
 
