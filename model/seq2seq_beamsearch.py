@@ -107,6 +107,8 @@ class Seq2Seq(nn.Module):
     def forward(self, src, trg, teacher_forcing_ratio=0.5):
         batch_size = src.size(0)
         max_len = trg.size(1)
+        print(batch_size)
+        print(max_len)
         vocab_size = self.decoder.output_size
         outputs = Variable(torch.zeros(batch_size, max_len, vocab_size)).cuda()
 
