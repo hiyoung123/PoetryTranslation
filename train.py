@@ -72,6 +72,8 @@ def train(e, model, optimizer, train_iter, vocab_size, grad_clip, source_dict, t
     total_loss = 0
     pad = target_dict['PAD']
     for b, batch in enumerate(train_iter):
+        print(len(batch))
+        print(len(batch[0]))
         # src, len_src = batch[0], batch[1]
         # trg, len_trg = batch[2], batch[3]
         src = torch.from_numpy(batch[0]).to(device).long()
