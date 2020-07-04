@@ -108,7 +108,7 @@ class Seq2Seq(nn.Module):
         batch_size = src.size(0)
         max_len = trg.size(1)
         vocab_size = self.decoder.output_size
-        outputs = Variable(torch.zeros(max_len, batch_size, vocab_size)).cuda()
+        outputs = Variable(torch.zeros(batch_size, max_len, vocab_size)).cuda()
 
         encoder_output, hidden = self.encoder(src)  # [27, 32]=> =>[27, 32, 512],[4, 32, 512]
         hidden = hidden[:self.decoder.n_layers]  # [4, 32, 512][1, 32, 512]
