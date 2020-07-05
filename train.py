@@ -16,7 +16,7 @@ from utils import load_dataset
 from sklearn.model_selection import train_test_split
 
 torch.manual_seed(123) #保证每次运行初始化的随机数相同
-os.environ["CUDA_VISIBLE_DEVICES"] = "2"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
