@@ -47,6 +47,8 @@ class Attention(nn.Module):
         self.v.data.uniform_(-stdv, stdv)
 
     def forward(self, hidden, encoder_outputs):
+        print(hidden.size())
+        print(encoder_outputs.size())
         timestep = encoder_outputs.size(1)
         h = hidden.repeat(1, timestep, 1)  # [32, 512]=>[32, 27, 512]
         print(h.size())
