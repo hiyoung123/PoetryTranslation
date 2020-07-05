@@ -81,8 +81,6 @@ class Decoder(nn.Module):
 
     def forward(self, input, last_hidden, encoder_outputs):  # 上一步的 output,上一步的 hidden_state
         # Get the embedding of the current input word (last output word)
-        print(input.size())
-        print(encoder_outputs.size())
         embedded = self.embed(input).unsqueeze(1)  # (1,B,N) # [32]=>[32, 256]=>[1, 32, 256]
         embedded = self.dropout(embedded)
         # Calculate attention weights and apply to encoder outputs
@@ -91,8 +89,6 @@ class Decoder(nn.Module):
         context = attn_weights.bmm(encoder_outputs)
         # context = context.transpose(0, 1)  # (1,B,N) # [32, 1, 512]=>[1, 32, 512]
         # Combine embedded input word and attended context, run through RNN
-        print(embedded.size())
-        print(context.size())
         rnn_input = torch.cat([embedded, context], 2)  # [1, 32, 256] cat [1, 32, 512]=> [1, 32, 768]
         output, hidden = self.gru(rnn_input, last_hidden)  # in:[1, 32, 768],[1, 32, 512]=>[1, 32, 512],[1, 32, 512]
         output = output.squeeze(1)  # (1,B,N) -> (B,N)
@@ -111,8 +107,6 @@ class Seq2Seq(nn.Module):
     def forward(self, src, trg, teacher_forcing_ratio=0.5):
         batch_size = src.size(0)
         max_len = trg.size(1)
-        # print(batch_size)
-        # print(max_len)
         vocab_size = self.decoder.output_size
         outputs = Variable(torch.zeros(batch_size, max_len, vocab_size)).cuda()
 
