@@ -127,7 +127,10 @@ class Seq2Seq(nn.Module):
                 outputs[i, t] = v
             is_teacher = random.random() < teacher_forcing_ratio
             top1 = output.data.max(1)[1]  # 按照 dim=1 求解最大值和最大值索引,x[1] 得到的是最大值的索引=>top1.shape=32
-            output = Variable(trg.data[t] if is_teacher else top1).cuda()
+            if is_teacher:
+                for i, v in enumerate(trg):
+                    top1[i] = trg.data[i][t]
+            output = Variable(top1).cuda()
         return outputs
 
     def decode(self, src, trg, method='beam-search'):
