@@ -81,6 +81,8 @@ class Decoder(nn.Module):
 
     def forward(self, input, last_hidden, encoder_outputs):  # 上一步的 output,上一步的 hidden_state
         # Get the embedding of the current input word (last output word)
+        print(input.size())
+        print(encoder_outputs.size())
         embedded = self.embed(input).unsqueeze(1)  # (1,B,N) # [32]=>[32, 256]=>[1, 32, 256]
         embedded = self.dropout(embedded)
         # Calculate attention weights and apply to encoder outputs
