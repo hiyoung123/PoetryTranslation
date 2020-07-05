@@ -49,6 +49,7 @@ class Attention(nn.Module):
     def forward(self, hidden, encoder_outputs):
         timestep = encoder_outputs.size(1)
         h = hidden.repeat(1, timestep, 1)  # [32, 512]=>[32, 27, 512]
+        print(h.size())
         # encoder_outputs = encoder_outputs.transpose(0, 1)  # [B*T*H] # [27, 32, 512]=>[32,27,512]
         attn_energies = self.score(h, encoder_outputs)  # =>[B*T]
         return F.softmax(attn_energies, dim=1).unsqueeze(1)  # [B*T]=>[B*1*T]
@@ -88,8 +89,8 @@ class Decoder(nn.Module):
         context = attn_weights.bmm(encoder_outputs)
         # context = context.transpose(0, 1)  # (1,B,N) # [32, 1, 512]=>[1, 32, 512]
         # Combine embedded input word and attended context, run through RNN
-        print(embedded.size())
-        print(context.size())
+        # print(embedded.size())
+        # print(context.size())
         rnn_input = torch.cat([embedded, context], 2)  # [1, 32, 256] cat [1, 32, 512]=> [1, 32, 768]
         output, hidden = self.gru(rnn_input, last_hidden)  # in:[1, 32, 768],[1, 32, 512]=>[1, 32, 512],[1, 32, 512]
         output = output.squeeze(1)  # (1,B,N) -> (B,N)
@@ -108,8 +109,8 @@ class Seq2Seq(nn.Module):
     def forward(self, src, trg, teacher_forcing_ratio=0.5):
         batch_size = src.size(0)
         max_len = trg.size(1)
-        print(batch_size)
-        print(max_len)
+        # print(batch_size)
+        # print(max_len)
         vocab_size = self.decoder.output_size
         outputs = Variable(torch.zeros(batch_size, max_len, vocab_size)).cuda()
 
