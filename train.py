@@ -17,6 +17,7 @@ from sklearn.model_selection import train_test_split
 
 torch.manual_seed(123) #保证每次运行初始化的随机数相同
 os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
@@ -88,7 +89,6 @@ def train(e, model, optimizer, train_iter, vocab_size, grad_clip, source_dict, t
         torch.nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
         optimizer.step()
         total_loss += loss.data.item()
-        print(total_loss)
         if b % 100 == 0 and b != 0:
             total_loss = total_loss / 100
             print("[%d][loss:%5.2f][pp:%5.2f]" %
