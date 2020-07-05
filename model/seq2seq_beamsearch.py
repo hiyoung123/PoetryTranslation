@@ -26,7 +26,7 @@ class Encoder(nn.Module):
         self.embed_size = embed_size  # 256
         self.embed = nn.Embedding(input_size, embed_size)
         self.gru = nn.GRU(embed_size, hidden_size, n_layers,
-                          dropout=dropout, bidirectional=True)
+                          dropout=dropout, bidirectional=True, batch_first=True)
 
     def forward(self, src, hidden=None):
         embedded = self.embed(src)  # [max_len, batch_size]
@@ -47,16 +47,16 @@ class Attention(nn.Module):
         self.v.data.uniform_(-stdv, stdv)
 
     def forward(self, hidden, encoder_outputs):
-        timestep = encoder_outputs.size(0)
-        h = hidden.repeat(timestep, 1, 1).transpose(0, 1)  # [32, 512]=>[32, 27, 512]
-        encoder_outputs = encoder_outputs.transpose(0, 1)  # [B*T*H] # [27, 32, 512]=>[32,27,512]
+        timestep = encoder_outputs.size(1)
+        h = hidden.repeat(1, timestep, 1)  # [32, 512]=>[32, 27, 512]
+        # encoder_outputs = encoder_outputs.transpose(0, 1)  # [B*T*H] # [27, 32, 512]=>[32,27,512]
         attn_energies = self.score(h, encoder_outputs)  # =>[B*T]
         return F.softmax(attn_energies, dim=1).unsqueeze(1)  # [B*T]=>[B*1*T]
 
     def score(self, hidden, encoder_outputs):
         # [B*T*2H]->[B*T*H]
         energy = F.relu(self.attn(torch.cat([hidden, encoder_outputs], 2)))
-        energy = energy.transpose(1, 2)  # [B*H*T]
+        # energy = energy.transpose(1, 2)  # [B*H*T]
         v = self.v.repeat(encoder_outputs.size(0), 1).unsqueeze(1)  # [B*1*H]
         energy = torch.bmm(v, energy)  # [B*1*H] bmm [B*H*T]=>[B*1*T]
         return energy.squeeze(1)  # [B*T]
@@ -75,24 +75,25 @@ class Decoder(nn.Module):
         self.dropout = nn.Dropout(dropout, inplace=True)
         self.attention = Attention(hidden_size)
         self.gru = nn.GRU(hidden_size + embed_size, hidden_size,
-                          n_layers, dropout=dropout)
+                          n_layers, dropout=dropout, batch_first=True)
         self.out = nn.Linear(hidden_size * 2, output_size)
 
     def forward(self, input, last_hidden, encoder_outputs):  # 上一步的 output,上一步的 hidden_state
         # Get the embedding of the current input word (last output word)
-        embedded = self.embed(input).unsqueeze(0)  # (1,B,N) # [32]=>[32, 256]=>[1, 32, 256]
+        embedded = self.embed(input).unsqueeze(1)  # (1,B,N) # [32]=>[32, 256]=>[1, 32, 256]
         embedded = self.dropout(embedded)
         # Calculate attention weights and apply to encoder outputs
         attn_weights = self.attention(last_hidden[-1], encoder_outputs)  # [32, 512][27, 32, 512]=>[32, 1, 27]
-        context = attn_weights.bmm(encoder_outputs.transpose(0, 1))  # (B,1,N) # [32, 1, 27]bmm[32, 27, 512]=>[32,1,512]
-        context = context.transpose(0, 1)  # (1,B,N) # [32, 1, 512]=>[1, 32, 512]
+        # context = attn_weights.bmm(encoder_outputs.transpose(0, 1))  # (B,1,N) # [32, 1, 27]bmm[32, 27, 512]=>[32,1,512]
+        context = attn_weights.bmm(encoder_outputs)
+        # context = context.transpose(0, 1)  # (1,B,N) # [32, 1, 512]=>[1, 32, 512]
         # Combine embedded input word and attended context, run through RNN
         print(embedded.size())
         print(context.size())
         rnn_input = torch.cat([embedded, context], 2)  # [1, 32, 256] cat [1, 32, 512]=> [1, 32, 768]
         output, hidden = self.gru(rnn_input, last_hidden)  # in:[1, 32, 768],[1, 32, 512]=>[1, 32, 512],[1, 32, 512]
-        output = output.squeeze(0)  # (1,B,N) -> (B,N)
-        context = context.squeeze(0)
+        output = output.squeeze(1)  # (1,B,N) -> (B,N)
+        context = context.squeeze(1)
         output = self.out(torch.cat([output, context], 1))  # [32, 512] cat [32, 512] => [32, 512*2]
         output = F.log_softmax(output, dim=1)
         return output, hidden, attn_weights  # [32, 10004] [1, 32, 512] [32, 1, 27]
@@ -114,7 +115,7 @@ class Seq2Seq(nn.Module):
 
         encoder_output, hidden = self.encoder(src)  # [27, 32]=> =>[27, 32, 512],[4, 32, 512]
         hidden = hidden[:self.decoder.n_layers]  # [4, 32, 512][1, 32, 512]
-        output = Variable(trg.data[0, :])  # sos
+        output = Variable(trg.data[:, 0])  # sos
         for t in range(1, max_len):
             output, hidden, attn_weights = self.decoder(
                 output, hidden, encoder_output)  # output:[32, 10004] [1, 32, 512] [32, 1, 27]
