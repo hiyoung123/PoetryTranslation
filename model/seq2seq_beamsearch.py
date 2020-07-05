@@ -99,16 +99,17 @@ class Decoder(nn.Module):
 
 
 class Seq2Seq(nn.Module):
-    def __init__(self, encoder, decoder):
+    def __init__(self, encoder, decoder, device):
         super(Seq2Seq, self).__init__()
-        self.encoder = encoder
-        self.decoder = decoder
+        self.encoder = encoder.to(self.device)
+        self.decoder = decoder.to(self.device)
+        self.device = device
 
     def forward(self, src, trg, teacher_forcing_ratio=0.5):
         batch_size = src.size(0)
         max_len = trg.size(1)
         vocab_size = self.decoder.output_size
-        outputs = Variable(torch.zeros(batch_size, max_len, vocab_size)).cuda()
+        outputs = Variable(torch.zeros(batch_size, max_len, vocab_size)).to(self.device)
 
         encoder_output, hidden = self.encoder(src)  # [27, 32]=> =>[27, 32, 512],[4, 32, 512]
         hidden = hidden[:self.decoder.n_layers]  # [4, 32, 512][1, 32, 512]
@@ -124,7 +125,7 @@ class Seq2Seq(nn.Module):
             if is_teacher:
                 for i, v in enumerate(trg):
                     top1[i] = trg.data[i][t]
-            output = Variable(top1).cuda()
+            output = Variable(top1).to(self.device)
         return outputs
 
     def decode(self, src, trg, method='beam-search'):
@@ -145,7 +146,7 @@ class Seq2Seq(nn.Module):
         seq_len, batch_size = trg.size()
         decoded_batch = torch.zeros((batch_size, seq_len))
         # decoder_input = torch.LongTensor([[EN.vocab.stoi['<sos>']] for _ in range(batch_size)]).cuda()
-        decoder_input = Variable(trg.data[0, :]).cuda()  # sos
+        decoder_input = Variable(trg.data[0, :]).to(self.device)  # sos
         print(decoder_input.shape)
         for t in range(seq_len):
             decoder_output, decoder_hidden, _ = self.decoder(decoder_input, decoder_hidden, encoder_outputs)
@@ -180,7 +181,7 @@ class Seq2Seq(nn.Module):
             encoder_output = encoder_outputs[:, idx, :].unsqueeze(1)  # [T,B,H]=>[T,H]=>[T,1,H]
 
             # Start with the start of the sentence token
-            decoder_input = torch.LongTensor([BOS_token]).cuda()
+            decoder_input = torch.LongTensor([BOS_token]).to(device)
 
             # Number of sentence to generate
             endnodes = []

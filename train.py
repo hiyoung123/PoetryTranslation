@@ -48,8 +48,8 @@ def evaluate(model, val_iter, vocab_size, source_dict, target_dict):
             src = torch.from_numpy(batch[0]).to(device).long()
             # src, trg = src.cuda(), trg.cuda()
             trg = torch.from_numpy(batch[2]).to(device).long()
-            src = Variable(src.data.cuda())
-            trg = Variable(trg.data.cuda())
+            src = Variable(src.data.to(device))
+            trg = Variable(trg.data.to(device))
             output = model(src, trg, teacher_forcing_ratio=0.0)
             loss = F.nll_loss(output[1:].view(-1, vocab_size),
                               trg[1:].contiguous().view(-1),
@@ -117,7 +117,7 @@ def main():
                       n_layers=2, dropout=0.5)
     decoder = Decoder(embed_size, hidden_size, target_vob_size,
                       n_layers=1, dropout=0.0)
-    seq2seq = Seq2Seq(encoder, decoder).cuda()
+    seq2seq = Seq2Seq(encoder, decoder, device).to(device)
     optimizer = optim.Adam(seq2seq.parameters(), lr=args.lr)
     print(seq2seq)
 
