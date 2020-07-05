@@ -181,7 +181,7 @@ class Seq2Seq(nn.Module):
             encoder_output = encoder_outputs[:, idx, :].unsqueeze(1)  # [T,B,H]=>[T,H]=>[T,1,H]
 
             # Start with the start of the sentence token
-            decoder_input = torch.LongTensor([BOS_token]).to(device)
+            decoder_input = torch.LongTensor([BOS_token]).to(self.device)
 
             # Number of sentence to generate
             endnodes = []
