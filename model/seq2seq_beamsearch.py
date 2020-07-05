@@ -123,7 +123,9 @@ class Seq2Seq(nn.Module):
         for t in range(1, max_len):
             output, hidden, attn_weights = self.decoder(
                 output, hidden, encoder_output)  # output:[32, 10004] [1, 32, 512] [32, 1, 27]
-            outputs[t] = output
+            # outputs[t] = output
+            for i, v in enumerate(output):
+                outputs[i, t] = v
             is_teacher = random.random() < teacher_forcing_ratio
             top1 = output.data.max(1)[1]  # 按照 dim=1 求解最大值和最大值索引,x[1] 得到的是最大值的索引=>top1.shape=32
             output = Variable(trg.data[t] if is_teacher else top1).cuda()
