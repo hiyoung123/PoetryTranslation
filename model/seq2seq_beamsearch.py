@@ -101,10 +101,10 @@ class Decoder(nn.Module):
 class Seq2Seq(nn.Module):
     def __init__(self, encoder, decoder, device):
         super(Seq2Seq, self).__init__()
+        self.device = device
         self.encoder = encoder.to(self.device)
         self.decoder = decoder.to(self.device)
-        self.device = device
-
+        
     def forward(self, src, trg, teacher_forcing_ratio=0.5):
         batch_size = src.size(0)
         max_len = trg.size(1)
