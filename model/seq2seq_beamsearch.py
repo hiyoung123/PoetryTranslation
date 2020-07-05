@@ -92,8 +92,8 @@ class Decoder(nn.Module):
         context = attn_weights.bmm(encoder_outputs)
         # context = context.transpose(0, 1)  # (1,B,N) # [32, 1, 512]=>[1, 32, 512]
         # Combine embedded input word and attended context, run through RNN
-        # print(embedded.size())
-        # print(context.size())
+        print(embedded.size())
+        print(context.size())
         rnn_input = torch.cat([embedded, context], 2)  # [1, 32, 256] cat [1, 32, 512]=> [1, 32, 768]
         output, hidden = self.gru(rnn_input, last_hidden)  # in:[1, 32, 768],[1, 32, 512]=>[1, 32, 512],[1, 32, 512]
         output = output.squeeze(1)  # (1,B,N) -> (B,N)
