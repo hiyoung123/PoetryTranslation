@@ -62,9 +62,8 @@ def evaluate(model, val_iter, vocab_size, source_dict, target_dict):
                     for i in line:
                         if i == eos_id:
                             break
-                        print(i.cpu().numpy()[0])
                         result.append(inv_target_dict.get(i.cpu().numpy()[0], ' '))
-                    print(result)
+                    print(''.join(result))
             total_loss += loss.data.item()
     return total_loss / len(val_iter)
 
@@ -110,7 +109,7 @@ def main():
     print("[!] preparing dataset...")
     # train_iter, val_iter, test_iter, DE, EN = load_dataset(args.batch_size)
     dataset, source_dict, target_dict = load_dataset(args.batch_size)
-    train_iter, val_iter = train_test_split(dataset[:100], test_size=0.2, random_state=123)
+    train_iter, val_iter = train_test_split(dataset, test_size=0.2, random_state=123)
     source_vob_size, target_vob_size = len(source_dict[0]), len(target_dict[0])
     # print("[TRAIN]:%d (dataset:%d)\t[TEST]:%d (dataset:%d)"
     #       % (len(train_iter), len(train_iter.dataset),
