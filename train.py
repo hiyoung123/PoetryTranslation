@@ -56,9 +56,12 @@ def evaluate(model, val_iter, vocab_size, source_dict, target_dict):
                               trg[1:].contiguous().view(-1),
                               ignore_index=pad)
             decoded_batch = model.decode(src, trg, method='beam-search')
+            print(decoded_batch.size())
             for o in decoded_batch:
                 result = []
                 for i in o:
+                    print(i.size())
+                    print(i)
                     if i == eos_id:
                         break
                     result.append(inv_target_dict.get(i, ' '))
