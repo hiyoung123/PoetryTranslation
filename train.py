@@ -56,14 +56,14 @@ def evaluate(model, val_iter, vocab_size, source_dict, target_dict):
                               trg[1:].contiguous().view(-1),
                               ignore_index=pad)
             decoded_batch = model.decode(src, trg, method='beam-search')
-            output_list.extend(decoded_batch.cpu().numpy())
+            output_list.extend(decoded_batch)
             total_loss += loss.data.item()
     for o in output_list:
         result = []
         for i in o:
             if i == eos_id:
                 break
-            result.append(target_dict[i])
+            result.append(target_dict[1][i])
         print(result)
     return total_loss / len(val_iter)
 
@@ -80,6 +80,9 @@ def train(e, model, optimizer, train_iter, vocab_size, grad_clip, source_dict, t
         src = torch.from_numpy(batch[0]).to(device).long()
         # src, trg = src.cuda(), trg.cuda()
         trg = torch.from_numpy(batch[2]).to(device).long()
+        #print('train')
+        #print(src.size())
+        #print(trg.size())
         optimizer.zero_grad()
         
         output = model(src, trg)

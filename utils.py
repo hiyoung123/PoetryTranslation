@@ -30,7 +30,14 @@ def create_dict(sentences, max_words):
 
     most_common_words = word_count.most_common(max_words)  # 最常见的max_words个词
     total_words = len(most_common_words) + 2  # 总词量（+2：词典中添加了“UNK”和“PAD”）
-    word_dict = {w[0]: index + 4 for index, w in enumerate(most_common_words) if w[0] not in ['BOS', 'EOS']}  # word2index
+    #word_dict = {w[0]: index + 4 for index, w in enumerate(most_common_words) if w[0] not in ['BOS', 'EOS']}  # word2index
+    word_dict = {}
+    i = 0
+    for w in most_common_words:
+        if w[0] in ['BOS', 'EOS']:
+            continue
+        word_dict[w[0]] = i + 4
+        i = i+1
     word_dict["UNK"] = 0
     word_dict["PAD"] = 1
     word_dict["BOS"] = 2

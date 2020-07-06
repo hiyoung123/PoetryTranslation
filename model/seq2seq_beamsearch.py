@@ -29,11 +29,14 @@ class Encoder(nn.Module):
                           dropout=dropout, bidirectional=True, batch_first=True)
 
     def forward(self, src, hidden=None):
+        #print('encoder')
+        #print(src.size())
         embedded = self.embed(src)  # [max_len, batch_size]
         outputs, hidden = self.gru(embedded, hidden)  # ([27, 32, 256],None)=>([27, 32, 1024],[4, 32, 512])
         # sum bidirectional outputs
         outputs = (outputs[:, :, :self.hidden_size] +
                    outputs[:, :, self.hidden_size:])  # =>[27, 32, 512] + [27, 32, 512]
+        #print(hidden.size())
         return outputs, hidden
 
 
@@ -56,6 +59,9 @@ class Attention(nn.Module):
 
     def score(self, hidden, encoder_outputs):
         # [B*T*2H]->[B*T*H]
+        #print('score')
+        #print(hidden.size())
+        #print(encoder_outputs.size())
         energy = F.relu(self.attn(torch.cat([hidden, encoder_outputs], 2)))
         energy = energy.transpose(1, 2)  # [B*H*T]
         v = self.v.repeat(encoder_outputs.size(0), 1).unsqueeze(1)  # [B*1*H]
@@ -84,6 +90,9 @@ class Decoder(nn.Module):
         embedded = self.embed(input).unsqueeze(1)  # (1,B,N) # [32]=>[32, 256]=>[1, 32, 256]
         embedded = self.dropout(embedded)
         # Calculate attention weights and apply to encoder outputs
+        #print('decoder')
+        #print(last_hidden[-1].size())
+        #print(encoder_outputs.size())
         attn_weights = self.attention(last_hidden[-1], encoder_outputs)  # [32, 512][27, 32, 512]=>[32, 1, 27]
         # context = attn_weights.bmm(encoder_outputs.transpose(0, 1))  # (B,1,N) # [32, 1, 27]bmm[32, 27, 512]=>[32,1,512]
         context = attn_weights.bmm(encoder_outputs)
@@ -115,6 +124,9 @@ class Seq2Seq(nn.Module):
         hidden = hidden[:self.decoder.n_layers]  # [4, 32, 512][1, 32, 512]
         output = Variable(trg.data[:, 0])  # sos
         for t in range(1, max_len):
+            #print('seq2seq')
+            #print(hidden.size())
+            #print(encoder_output.size())
             output, hidden, attn_weights = self.decoder(
                 output, hidden, encoder_output)  # output:[32, 10004] [1, 32, 512] [32, 1, 27]
             # outputs[t] = output
@@ -129,8 +141,11 @@ class Seq2Seq(nn.Module):
         return outputs
 
     def decode(self, src, trg, method='beam-search'):
+        #print('decode')
         encoder_output, hidden = self.encoder(src)  # [27, 32]=> =>[27, 32, 512],[4, 32, 512]
         hidden = hidden[:self.decoder.n_layers]  # [4, 32, 512][1, 32, 512]
+        #print(hidden.size())
+        #print(encoder_output.size())
         if method == 'beam-search':
             return self.beam_decode(trg, hidden, encoder_output)
         else:
@@ -147,7 +162,7 @@ class Seq2Seq(nn.Module):
         decoded_batch = torch.zeros((batch_size, seq_len))
         # decoder_input = torch.LongTensor([[EN.vocab.stoi['<sos>']] for _ in range(batch_size)]).cuda()
         decoder_input = Variable(trg.data[0, :]).to(self.device)  # sos
-        print(decoder_input.shape)
+        #print(decoder_input.shape)
         for t in range(seq_len):
             decoder_output, decoder_hidden, _ = self.decoder(decoder_input, decoder_hidden, encoder_outputs)
 
@@ -166,7 +181,8 @@ class Seq2Seq(nn.Module):
         :param encoder_outputs: if you are using attention mechanism you can pass encoder outputs, [T, B, H] where T is the maximum length of input sentence
         :return: decoded_batch
         '''
-        target_tensor = target_tensor.permute(1, 0)
+        #print('beam_decode')
+        #target_tensor = target_tensor.permute(1, 0)
         beam_width = 10
         topk = 1  # how many sentence do you want to generate
         decoded_batch = []
@@ -178,8 +194,8 @@ class Seq2Seq(nn.Module):
                     decoder_hiddens[0][:, idx, :].unsqueeze(0), decoder_hiddens[1][:, idx, :].unsqueeze(0))
             else:
                 decoder_hidden = decoder_hiddens[:, idx, :].unsqueeze(0)  # [1, B, H]=>[1,H]=>[1,1,H]
-            encoder_output = encoder_outputs[:, idx, :].unsqueeze(1)  # [T,B,H]=>[T,H]=>[T,1,H]
-
+            #encoder_output = encoder_outputs[:, idx, :].unsqueeze(1)  # [T,B,H]=>[T,H]=>[T,1,H]
+            encoder_output = encoder_outputs[idx, :, :].unsqueeze(0)  # [T,B,H]=>[T,H]=>[T,1,H] 
             # Start with the start of the sentence token
             decoder_input = torch.LongTensor([BOS_token]).to(self.device)
 
