@@ -62,8 +62,8 @@ def evaluate(model, val_iter, vocab_size, source_dict, target_dict):
                     for i in line:
                         if i == eos_id:
                             break
-                        print(i.numpy()[0])
-                        result.append(inv_target_dict.get(i.numpy()[0], ' '))
+                        print(i.cpu().numpy()[0])
+                        result.append(inv_target_dict.get(i.cpu().numpy()[0], ' '))
                     print(result)
             total_loss += loss.data.item()
     return total_loss / len(val_iter)
