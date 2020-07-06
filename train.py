@@ -38,8 +38,8 @@ def evaluate(model, val_iter, vocab_size, source_dict, target_dict):
     model.eval()
     pad = target_dict[0]['PAD']
     eos_id = target_dict[0]['EOS']
-    output_list = []
     total_loss = 0
+    inv_target_dict = target_dict[1]
     with torch.no_grad():
         for b, batch in enumerate(val_iter):
             # src, len_src = batch.src
@@ -56,18 +56,14 @@ def evaluate(model, val_iter, vocab_size, source_dict, target_dict):
                               trg[1:].contiguous().view(-1),
                               ignore_index=pad)
             decoded_batch = model.decode(src, trg, method='beam-search')
-            output_list.extend(decoded_batch)
+            for o in decoded_batch:
+                result = []
+                for i in o:
+                    if i == eos_id:
+                        break
+                    result.append(inv_target_dict.get(i, ' '))
+                print(result)
             total_loss += loss.data.item()
-    inv_target_dict = target_dict[1]
-    print(inv_target_dict)
-    for o in output_list:
-        result = []
-        for i in o:
-            if i == eos_id:
-                break
-            print(i)
-            result.append(inv_target_dict.get(i, ' '))
-        print(result)
     return total_loss / len(val_iter)
 
 
@@ -112,7 +108,7 @@ def main():
     print("[!] preparing dataset...")
     # train_iter, val_iter, test_iter, DE, EN = load_dataset(args.batch_size)
     dataset, source_dict, target_dict = load_dataset(args.batch_size)
-    train_iter, val_iter = train_test_split(dataset[:1000], test_size=0.2, random_state=123)
+    train_iter, val_iter = train_test_split(dataset[:100], test_size=0.2, random_state=123)
     source_vob_size, target_vob_size = len(source_dict[0]), len(target_dict[0])
     # print("[TRAIN]:%d (dataset:%d)\t[TEST]:%d (dataset:%d)"
     #       % (len(train_iter), len(train_iter.dataset),
