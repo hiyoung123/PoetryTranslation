@@ -63,7 +63,8 @@ def evaluate(model, val_iter, vocab_size, source_dict, target_dict):
         for i in o:
             if i == eos_id:
                 break
-            result.append(target_dict[1][i])
+            inv_target_dict = target_dict[1]
+            result.append(inv_target_dict.get(i, ' '))
         print(result)
     return total_loss / len(val_iter)
 
