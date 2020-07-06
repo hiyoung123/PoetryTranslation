@@ -89,8 +89,8 @@ def train(e, model, optimizer, train_iter, vocab_size, grad_clip, source_dict, t
             loss.backward()
         except Exception as e:
             print(e)
-            print(src)
-            print(trg)
+            print(src.size())
+            print(trg.size())
         torch.nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
         optimizer.step()
         total_loss += loss.data.item()
