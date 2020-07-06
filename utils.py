@@ -30,7 +30,7 @@ def create_dict(sentences, max_words):
 
     most_common_words = word_count.most_common(max_words)  # 最常见的max_words个词
     total_words = len(most_common_words) + 2  # 总词量（+2：词典中添加了“UNK”和“PAD”）
-    word_dict = {w[0]: index + 4 for index, w in enumerate(most_common_words)}  # word2index
+    word_dict = {w[0]: index + 4 for index, w in enumerate(most_common_words) if w[0] not in ['BOS', 'EOS']}  # word2index
     word_dict["UNK"] = 0
     word_dict["PAD"] = 1
     word_dict["BOS"] = 2
@@ -77,7 +77,7 @@ def add_padding(batch_sentences, max_len):
     for sentence in batch_sentences:
         sen_len = len(sentence)
         # 将每个句子末尾添0，使得每个batch中的句子等长（后续将每个batch数据转换成tensor时，每个batch中的数据维度必须一致）
-        sentence = sentence + [0] * (max_len - sen_len)
+        sentence = sentence + [1] * (max_len - sen_len)
         data.append(sentence)
     data = np.array(data).astype('int32')
     # data_lengths = np.array(lengths).astype('int32')

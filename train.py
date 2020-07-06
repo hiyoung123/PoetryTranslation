@@ -76,21 +76,17 @@ def train(e, model, optimizer, train_iter, vocab_size, grad_clip, source_dict, t
         # print(len(batch)) # 4
         # print(len(batch[0])) # 32 batch_size
         # src, len_src = batch[0], batch[1]
-        # trg, len_trg = batch[2], batch[3]
+        # trg, len_trg = batch[2], batch[3] 
         src = torch.from_numpy(batch[0]).to(device).long()
         # src, trg = src.cuda(), trg.cuda()
         trg = torch.from_numpy(batch[2]).to(device).long()
         optimizer.zero_grad()
-        try:
-            output = model(src, trg)
-            loss = F.nll_loss(output[1:].view(-1, vocab_size),
-                              trg[1:].contiguous().view(-1),
-                              ignore_index=pad)
-            loss.backward()
-        except Exception as e:
-            print(e)
-            print(src.size())
-            print(trg.size())
+        
+        output = model(src, trg)
+        loss = F.nll_loss(output[1:].view(-1, vocab_size),
+                          trg[1:].contiguous().view(-1),
+                          ignore_index=pad)
+        loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
         optimizer.step()
         total_loss += loss.data.item()
