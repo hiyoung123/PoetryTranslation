@@ -36,8 +36,8 @@ def parse_arguments():
 
 def evaluate(model, val_iter, vocab_size, source_dict, target_dict):
     model.eval()
-    pad = target_dict['PAD']
-    eos_id = target_dict['EOS']
+    pad = target_dict[0]['PAD']
+    eos_id = target_dict[0]['EOS']
     output_list = []
     total_loss = 0
     with torch.no_grad():
@@ -71,7 +71,7 @@ def evaluate(model, val_iter, vocab_size, source_dict, target_dict):
 def train(e, model, optimizer, train_iter, vocab_size, grad_clip, source_dict, target_dict):
     model.train()
     total_loss = 0
-    pad = target_dict['PAD']
+    pad = target_dict[0]['PAD']
     for b, batch in enumerate(train_iter):
         # print(len(batch)) # 4
         # print(len(batch[0])) # 32 batch_size
@@ -128,8 +128,8 @@ def main():
     best_val_loss = None
     for e in range(1, args.epochs + 1):
         train(e, seq2seq, optimizer, train_iter,
-              target_vob_size, args.grad_clip, source_dict[0], target_dict[0])
-        val_loss = evaluate(seq2seq, val_iter, target_vob_size, source_dict[0], target_dict[0])
+              target_vob_size, args.grad_clip, source_dict, target_dict)
+        val_loss = evaluate(seq2seq, val_iter, target_vob_size, source_dict, target_dict)
         print("[Epoch:%d] val_loss:%5.3f | val_pp:%5.2fS"
               % (e, val_loss, math.exp(val_loss)))
 
