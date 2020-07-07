@@ -87,19 +87,21 @@ def train(e, model, optimizer, train_iter, vocab_size, grad_clip, source_dict, t
         # print(len(batch)) # 4
         # print(len(batch[0])) # 32 batch_size
         # src, len_src = batch[0], batch[1]
-        # trg, len_trg = batch[2], batch[3] 
+        # trg, len_trg = batch[2], batch[3]
+        print('source:')
+        for line in batch[0][:2]:
+            result = []
+            print()
+            for i in line:
+                result.append(inv_source_dict.get(i, ' '))
+            print(''.join(result))
         src = torch.from_numpy(batch[0]).to(device).long()
         # src, trg = src.cuda(), trg.cuda()
         trg = torch.from_numpy(batch[2]).to(device).long()
         #print('train')
         #print(src.size())
         #print(trg.size())
-        print('source:')
-        for line in src[:2]:
-            result = []
-            for i in line:
-                result.append(inv_source_dict.get(i.cpu().numpy()[0], ' '))
-            print(''.join(result))
+
         optimizer.zero_grad()
         
         output = model(src, trg)
