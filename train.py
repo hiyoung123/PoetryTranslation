@@ -47,19 +47,20 @@ def evaluate(model, val_iter, vocab_size, source_dict, target_dict):
             # trg, len_trg = batch.trg
             # src, len_src = batch[0], batch[1]
             # trg, len_trg = batch[2], batch[3]
+            print('source:')
+            for line in batch[0][:2]:
+                result = []
+                for i in line:
+                    if i == eos_id:
+                        break
+                    result.append(inv_source_dict.get(i, ' '))
+                print(''.join(result))
             src = torch.from_numpy(batch[0]).to(device).long()
             # src, trg = src.cuda(), trg.cuda()
             trg = torch.from_numpy(batch[2]).to(device).long()
             src = Variable(src.data.to(device))
             trg = Variable(trg.data.to(device))
-            print('source:')
-            for line in src[:2]:
-                result = []
-                for i in line:
-                    if i == eos_id:
-                        break
-                    result.append(inv_source_dict.get(i.cpu().numpy()[0], ' '))
-                print(''.join(result))
+
             output = model(src, trg, teacher_forcing_ratio=0.0)
             loss = F.nll_loss(output[1:].view(-1, vocab_size),
                               trg[1:].contiguous().view(-1),
@@ -82,19 +83,11 @@ def train(e, model, optimizer, train_iter, vocab_size, grad_clip, source_dict, t
     model.train()
     total_loss = 0
     pad = target_dict[0]['PAD']
-    inv_source_dict = source_dict[1]
     for b, batch in enumerate(train_iter):
         # print(len(batch)) # 4
         # print(len(batch[0])) # 32 batch_size
         # src, len_src = batch[0], batch[1]
         # trg, len_trg = batch[2], batch[3]
-        print('source:')
-        for line in batch[0][:2]:
-            result = []
-            print()
-            for i in line:
-                result.append(inv_source_dict.get(i, ' '))
-            print(''.join(result))
         src = torch.from_numpy(batch[0]).to(device).long()
         # src, trg = src.cuda(), trg.cuda()
         trg = torch.from_numpy(batch[2]).to(device).long()
