@@ -53,7 +53,7 @@ def evaluate(model, val_iter, vocab_size, source_dict, target_dict):
             src = Variable(src.data.to(device))
             trg = Variable(trg.data.to(device))
             print('source:')
-            for line in src:
+            for line in src[:2]:
                 result = []
                 for i in line:
                     if i == eos_id:
@@ -82,6 +82,7 @@ def train(e, model, optimizer, train_iter, vocab_size, grad_clip, source_dict, t
     model.train()
     total_loss = 0
     pad = target_dict[0]['PAD']
+    inv_source_dict = source_dict[1]
     for b, batch in enumerate(train_iter):
         # print(len(batch)) # 4
         # print(len(batch[0])) # 32 batch_size
@@ -93,6 +94,12 @@ def train(e, model, optimizer, train_iter, vocab_size, grad_clip, source_dict, t
         #print('train')
         #print(src.size())
         #print(trg.size())
+        print('source:')
+        for line in src[:2]:
+            result = []
+            for i in line:
+                result.append(inv_source_dict.get(i.cpu().numpy()[0], ' '))
+            print(''.join(result))
         optimizer.zero_grad()
         
         output = model(src, trg)
