@@ -40,6 +40,7 @@ def evaluate(model, val_iter, vocab_size, source_dict, target_dict):
     eos_id = target_dict[0]['EOS']
     total_loss = 0
     inv_target_dict = target_dict[1]
+    inv_source_dict = source_dict[1]
     with torch.no_grad():
         for b, batch in enumerate(val_iter):
             # src, len_src = batch.src
@@ -51,13 +52,22 @@ def evaluate(model, val_iter, vocab_size, source_dict, target_dict):
             trg = torch.from_numpy(batch[2]).to(device).long()
             src = Variable(src.data.to(device))
             trg = Variable(trg.data.to(device))
+            print('source:')
+            for line in src:
+                result = []
+                for i in line:
+                    if i == eos_id:
+                        break
+                    result.append(inv_source_dict.get(i.cpu().numpy()[0], ' '))
+                print(''.join(result))
             output = model(src, trg, teacher_forcing_ratio=0.0)
             loss = F.nll_loss(output[1:].view(-1, vocab_size),
                               trg[1:].contiguous().view(-1),
                               ignore_index=pad)
-            decoded_batch = model.decode(src, trg, method='beam-search')
-            for beam in decoded_batch:
-                for line in beam:
+            decoded_batch = model.decode(src, method='beam-search')
+            print('target:')
+            for beam in decoded_batch[:2]:
+                for line in beam[:2]:
                     result = []
                     for i in line:
                         if i == eos_id:

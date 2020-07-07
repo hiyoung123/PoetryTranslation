@@ -140,28 +140,28 @@ class Seq2Seq(nn.Module):
             output = Variable(top1).to(self.device)
         return outputs
 
-    def decode(self, src, trg, method='beam-search'):
+    def decode(self, src, method='beam-search'):
         #print('decode')
         encoder_output, hidden = self.encoder(src)  # [27, 32]=> =>[27, 32, 512],[4, 32, 512]
         hidden = hidden[:self.decoder.n_layers]  # [4, 32, 512][1, 32, 512]
         #print(hidden.size())
         #print(encoder_output.size())
         if method == 'beam-search':
-            return self.beam_decode(trg, hidden, encoder_output)
+            return self.beam_decode(hidden, encoder_output)
         else:
-            return self.greedy_decode(trg, hidden, encoder_output)
+            return self.greedy_decode(hidden, encoder_output)
 
-    def greedy_decode(self, trg, decoder_hidden, encoder_outputs, ):
+    def greedy_decode(self, decoder_hidden, encoder_outputs):
         '''
         :param target_tensor: target indexes tensor of shape [B, T] where B is the batch size and T is the maximum length of the output sentence
         :param decoder_hidden: input tensor of shape [1, B, H] for start of the decoding
         :param encoder_outputs: if you are using attention mechanism you can pass encoder outputs, [T, B, H] where T is the maximum length of input sentence
         :return: decoded_batch
         '''
-        seq_len, batch_size = trg.size()
+        seq_len, batch_size = encoder_outputs.size()
         decoded_batch = torch.zeros((batch_size, seq_len))
         # decoder_input = torch.LongTensor([[EN.vocab.stoi['<sos>']] for _ in range(batch_size)]).cuda()
-        decoder_input = Variable(trg.data[0, :]).to(self.device)  # sos
+        decoder_input = Variable(encoder_outputs.data[0, :]).to(self.device)  # sos
         #print(decoder_input.shape)
         for t in range(seq_len):
             decoder_output, decoder_hidden, _ = self.decoder(decoder_input, decoder_hidden, encoder_outputs)
@@ -174,7 +174,7 @@ class Seq2Seq(nn.Module):
 
         return decoded_batch
 
-    def beam_decode(self, target_tensor, decoder_hiddens, encoder_outputs=None):
+    def beam_decode(self, decoder_hiddens, encoder_outputs=None):
         '''
         :param target_tensor: target indexes tensor of shape [B, T] where B is the batch size and T is the maximum length of the output sentence
         :param decoder_hiddens: input tensor of shape [1, B, H] for start of the decoding
@@ -188,7 +188,7 @@ class Seq2Seq(nn.Module):
         decoded_batch = []
 
         # decoding goes sentence by sentence
-        for idx in range(target_tensor.size(0)):  # batch_size
+        for idx in range(encoder_outputs.size(0)):  # batch_size
             if isinstance(decoder_hiddens, tuple):  # LSTM case
                 decoder_hidden = (
                     decoder_hiddens[0][:, idx, :].unsqueeze(0), decoder_hiddens[1][:, idx, :].unsqueeze(0))
