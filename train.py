@@ -16,7 +16,7 @@ from utils import load_dataset
 from sklearn.model_selection import train_test_split
 
 torch.manual_seed(123) #保证每次运行初始化的随机数相同
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -121,7 +121,7 @@ def main():
     print("[!] preparing dataset...")
     # train_iter, val_iter, test_iter, DE, EN = load_dataset(args.batch_size)
     dataset, source_dict, target_dict = load_dataset(args.batch_size)
-    train_iter, val_iter = train_test_split(dataset, test_size=0.2, random_state=123)
+    # train_iter, val_iter = train_test_split(dataset, test_size=0.2, random_state=123)
     source_vob_size, target_vob_size = len(source_dict[0]), len(target_dict[0])
     # print("[TRAIN]:%d (dataset:%d)\t[TEST]:%d (dataset:%d)"
     #       % (len(train_iter), len(train_iter.dataset),
@@ -139,9 +139,9 @@ def main():
 
     best_val_loss = None
     for e in range(1, args.epochs + 1):
-        train(e, seq2seq, optimizer, train_iter,
+        train(e, seq2seq, optimizer, dataset,
               target_vob_size, args.grad_clip, source_dict, target_dict)
-        val_loss = evaluate(seq2seq, val_iter, target_vob_size, source_dict, target_dict)
+        val_loss = evaluate(seq2seq, dataset, target_vob_size, source_dict, target_dict)
         print("[Epoch:%d] val_loss:%5.3f | val_pp:%5.2fS"
               % (e, val_loss, math.exp(val_loss)))
 
